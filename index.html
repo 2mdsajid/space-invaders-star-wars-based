@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="jquery.js" type="text/javascript" charset="utf-8"></script>
+  <title>SW : ANH</title>
+  <style>
+    .cont {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      border: solid 0.0001px #42445A;
+      background: #000000;
+      display: flex;
+      flex-wrap: wrap;
+      position: relative;
+      background-image: url("star.png");
+      background-repeat: no-repeat;
+      background-size: 300px 300px;
+
+    }
+
+    .box {
+      height: 10px;
+      width: 10px;
+
+
+      font-size: 0.01px;
+    }
+
+    .btn {
+      height: 210px;
+      width: 210px;
+      margin: 50px auto;
+      display: flex;
+      flex-wrap: wrap;
+      border: solid 0px #42445A;
+    }
+
+    button {
+      width: 70px;
+      height: 70px;
+      border: solid 0px #42445A;
+      background: #FFFFFF;
+    }
+
+    .u {
+      background-image: url("arrow.png");
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+    }
+
+    .d {
+      background-image: url("arrow.png");
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+      transform: rotateX(-180deg);
+    }
+
+    .l {
+      background-image: url("arrow.png");
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+      transform: rotateZ(-90deg);
+    }
+
+    .r {
+      background-image: url("arrow.png");
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+      transform: rotateZ(90deg);
+    }
+
+    .s {
+      background-image: url("s.png");
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+    }
+
+    .ship {
+      transform: scale(2);
+      background-image: url("ship.png");
+      background-repeat: no-repeat;
+      background-size: 10px 10px;
+    }
+
+    .enemy {
+      transform: scale(1.5);
+      background-image: url("enemy.png");
+      background-repeat: no-repeat;
+      background-size: 10px 10px;
+    }
+
+    .bullet {
+      background-image: url("bullet.png");
+      background-repeat: no-repeat;
+      background-size: 10px 10px;
+    }
+
+    .kerbel {
+      border-bottom: solid 1px #FF4F16;
+    }
+
+    .begin {
+      width: 100%;
+    }
+
+    .dialogue {
+      position: absolute;
+      height: 59px;
+      width: 150px;
+      border: solid 1px #42445A;
+      transform: scale(1);
+      top: 30%;
+      left: 30%;
+      z-index: 100;
+    }
+
+    .score {
+      width: 100%;
+      height: 100%;
+
+    }
+
+    .status {
+      width: 100%;
+      height: 100%;
+      background: #FBFBFB;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .scr{
+      position: absolute;
+      top: 0;
+      width: 50px;
+      height: 20px;
+      background: #7DCDF1;
+      font-size: .7em;
+      z-index: 10000;
+    }
+    .rules{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: .7rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="rules">
+    RULES ( might have bugs ) <br>1) Level 1 : 15 kills, Level 2 : 10 kills, Level 3 : 5 kills<br>2) Use arrow keys to navigate<br>3) You lose if enemies cross red line
+  </div>
+  <div class="cont">
+    <div class="scr">score : 0</div>
+    <div class="dialogue">
+      <div class="status">START</div>
+    </div>
+  </div>
+  <div class="btn">
+    <button type="submit"></button>
+    <button type="submit" class="u"></button>
+    <button type="submit"></button>
+    <button type="submit" class="l"></button>
+    <button type="submit" class="s shoot">∞</button>
+    <button type="submit" class="r"></button>
+    <button type="submit"></button>
+    <button type="submit" class="d"></button>
+    <button type="submit"></button>
+
+  </div>
+  <audio class="destroy" id="destroy" src="destroy.mp3"></audio>
+
+  <script>
+    for (i = 0; i < 900; i++) {
+      let box = document.createElement('div')
+      box.classList.add('box')
+      box.textContent = ''
+      if (i > 599 && i < 630) {
+        box.classList.add('kerbel')
+      }
+      $('.cont').append(box)
+    }
+
+    let boxes = $('.cont').children()
+
+
+    function getRandomItem(arr) {
+      const randomIndex = Math.floor(Math.random() * 30);
+      return arr.length - randomIndex;
+    }
+
+    function drawShip(arr, pos) {
+
+      if (pos <= arr.length) {
+        const ship = arr[pos]
+        $(ship).toggleClass('ship')
+      }
+    }
+
+    function drawBullet(arr, pos) {
+      const ship = arr[pos]
+      $(ship).toggleClass('bullet')
+    }
+
+    function drawEnemy(arr, pos) {
+
+      const ship = arr[pos]
+      $(ship).toggleClass('enemy')
+
+    }
+
+    function generateEnemyPos() {
+      let randomPos = Math.floor(Math.random() * 30)
+      return randomPos
+    }
+
+    function displayLevel(level) {
+      $('.dialogue').show()
+      $('.status').text(`Level : ${level}`)
+      setTimeout(() => {
+        $('.dialogue').hide()
+      }, 1200)
+    }
+
+    function moveEnemies() {
+      if (enemies.length > 0) {
+        for (let enemy of enemies) {
+          drawEnemy(boxes, enemy)
+          if (enemy + 30 < 900) {
+            enemiesNext.push(enemy + 30)
+          }
+        }
+        enemies = enemiesNext
+        for (let enemy of enemiesNext) {
+          drawEnemy(boxes, enemy)
+        }
+        enemiesNext = []
+      }
+    }
+
+    let score = 0
+    let speed = 1000
+    var level = 1
+    var shipPosition = getRandomItem(boxes)
+
+    var bullets = []
+    var bulletsNext = []
+    var enemies = []
+    var enemiesNext = []
+
+
+
+    $('.dialogue').on('click', () => {
+
+      var audio = new Audio('begin.mp3');
+      audio.play();
+
+      $('.status').text(`Level : ${level}`)
+      setTimeout(() => {
+        $('.dialogue').hide()
+      }, 500)
+
+
+
+      drawShip(boxes, shipPosition)
+
+      var generateEnemy = setInterval(() => {
+        if (enemies.length <= 5) {
+          enemy = generateEnemyPos()
+          drawEnemy(boxes, enemy)
+
+          enemies.push(enemy)
+          moveEnemies
+        }
+      }, speed)
+
+      var move = setInterval(moveEnemies, speed)
+
+      $('.shoot').on('click', () => {
+
+
+        if (score == 15) {
+          score += 1
+          level = 2
+          speed = speed - 500
+          clearInterval(move)
+          displayLevel(level)
+          console.log(speed)
+          setTimeout(() => {
+            var move = setInterval(moveEnemies, speed)
+
+          })
+
+        } else if (score == 25) {
+          score += 1
+          level = 3
+          speed = speed - 200
+          clearInterval(move)
+          displayLevel(level)
+          console.log(speed)
+          setTimeout(() => {
+            var move = setInterval(moveEnemies, speed)
+          })
+
+        } else if (score == 30) {
+          clearInterval(generateEnemy)
+          clearInterval(moveBullets)
+          clearInterval(move)
+          enemies = []
+          enemiesNext = []
+          $('.dialogue').show()
+          $('.status').text('WIN')
+          $('.dialogue').on('click', () => {
+            location.reload();
+          })
+        }
+      })
+
+
+      /* CHECK STATUS */
+      var checkStatus = setInterval(() => {
+        $('.score').text(`${score},${level},${speed}`)
+
+        if (bullets.length > 0) {
+
+          for (let enemy of enemies) {
+            for (let bullet of bullets) {
+              if (enemy == bullet) {
+                document.getElementById('destroy').play()
+                score += 1
+                $('.scr').text(`score : ${score}`)
+                $(boxes[enemy]).toggleClass('enemy')
+                enemies = enemies.filter(item => item !== enemy)
+                $(boxes[bullet]).toggleClass('bullet')
+                bullets = bullets.filter(item => item !== bullet)
+              }
+            }
+          }
+        }
+
+        if (enemies.length > 0) {
+          for (enemy of enemies) {
+            if (enemy > 629) {
+              clearInterval(generateEnemy)
+              clearInterval(moveBullets)
+              clearInterval(move)
+              enemies = []
+              enemiesNext = []
+              $('.dialogue').show()
+              $('.status').text(`LOSE | KILLS : ${score}
+                (click to reload)`)
+              $('.dialogue').on('click', () => {
+                location.reload();
+              })
+            }
+          }
+        }
+      }, 1)
+    })
+
+
+
+    var moveBullets = setInterval(() => {
+
+      if (bullets.length > 0) {
+        for (let bullet of bullets) {
+          drawBullet(boxes, bullet)
+          if (bullet - 30 > 0) {
+            bulletsNext.push(bullet - 30)
+          }
+        }
+        bullets = bulletsNext
+        for (let bullet of bulletsNext) {
+          drawBullet(boxes, bullet)
+        }
+        bulletsNext = []
+      }
+    }, 100)
+
+
+
+    $('button').on('click', (e) => {
+      if (e.currentTarget.classList.contains('d')) {
+
+
+        if (shipPosition + 30 < 900) {
+          drawShip(boxes, shipPosition)
+          shipPosition = shipPosition + 30
+          drawShip(boxes, shipPosition)
+        }
+      } else if (e.currentTarget.classList.contains('l')) {
+        if (shipPosition - 1 > 630) {
+          drawShip(boxes, shipPosition)
+          shipPosition = shipPosition - 1
+          drawShip(boxes, shipPosition)
+        }
+      } else if (e.currentTarget.classList.contains('u')) {
+        if (shipPosition - 30 > 630) {
+          drawShip(boxes, shipPosition)
+          shipPosition = shipPosition - 30
+          drawShip(boxes, shipPosition)
+        }
+      } else if (e.currentTarget.classList.contains('r')) {
+        if (shipPosition + 1 < 900) {
+          drawShip(boxes, shipPosition)
+          shipPosition = shipPosition + 1
+          drawShip(boxes, shipPosition)
+        }
+      } else if (e.currentTarget.classList.contains('s')) {
+
+        var audio = new Audio('saber.mp3');
+        audio.play();
+
+        var bulletPosition = shipPosition - 30
+        drawBullet(boxes, bulletPosition)
+        bullets.push(bulletPosition)
+        moveBullets
+
+      }
+    })
+  </script>
+  <script src="main.js"></script>
+</body>
+
+</html>
